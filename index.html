@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The cost of a secret</title>
+  <meta name="description" content="An interactive lab on algorithmic complexity and timing side channels.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the lab</a>
+  <div class="wrap">
+    <header>
+      <h1>The cost of a secret</h1>
+      <p class="deck">Complexity asks how work grows when the input grows. A timing side channel appears when that work also depends on a secret. This page counts operations in a small model of both ideas. It does not time a real machine.</p>
+      <ol class="steps">
+        <li>Move <strong>n</strong> and switch algorithms. The table is one slice. The chart is every size from 1 to 32.</li>
+        <li>Play the string walk. Stop-early returns at the first difference. Check-every always finishes the width.</li>
+        <li>Read the staircase. One family of bars rises with the shared prefix. The other stays flat.</li>
+      </ol>
+    </header>
+
+    <main id="main">
+      <noscript>
+        <p class="callout">This lab needs JavaScript to draw the charts. The script stays in the page and does not send the strings you type anywhere.</p>
+      </noscript>
+
+      <section class="card" id="growth" aria-labelledby="growth-title">
+        <p class="eyebrow">01 · Algorithmic complexity</p>
+        <h2 id="growth-title">How work grows</h2>
+        <p>These five routines are counted in the model listed in the README. The chart uses a linear scale, so a quadratic curve leaves the others near the axis. That squash is the lesson. Zoom when you want the shape of a slower-growing routine.</p>
+
+        <div class="layout">
+          <div class="controls">
+            <div class="n-control">
+              <label for="n-slider">Input size n</label>
+              <div class="n-row">
+                <input id="n-slider" type="range" min="1" max="32" value="16" aria-controls="chart slice">
+                <label class="n-number" for="n-number">n
+                  <input id="n-number" type="number" min="1" max="32" step="1" value="16" inputmode="numeric" aria-describedby="n-hint">
+                </label>
+              </div>
+              <p id="n-hint" class="hint"></p>
+            </div>
+
+            <label for="algorithm">Algorithm</label>
+            <select id="algorithm"></select>
+            <p id="blurb" class="blurb"></p>
+
+            <label class="check" for="zoom">
+              <input id="zoom" type="checkbox">
+              Zoom the vertical scale to the selected algorithm
+            </label>
+
+            <button type="button" id="count-btn" class="primary">Count the work</button>
+            <p class="fine">The chart follows the slider immediately. The button replays the counter.</p>
+
+            <p class="bignum" id="op-count">16</p>
+            <p class="bignum-caption" id="op-caption">operations</p>
+            <div class="meter">
+              <div class="meter-fill" id="meter-fill"></div>
+            </div>
+            <p class="fine">Filled share of an all-pairs loop at this same n.</p>
+            <p id="snapshot"></p>
+            <p id="count-live" class="sr-only" aria-live="polite"></p>
+          </div>
+
+          <div class="chart-sticky">
+            <svg id="chart" viewBox="0 0 680 380" role="img" aria-label="Operation counts for input sizes 1 through 32"></svg>
+            <ul id="legend" class="legend"></ul>
+            <p class="fine">Horizontal axis: input size n. Vertical axis: operations in the model. The marker is the slider.</p>
+            <table id="slice">
+              <caption id="slice-caption">Operations at this n</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Routine</th>
+                  <th scope="col">Operations</th>
+                </tr>
+              </thead>
+              <tbody id="slice-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="bridge">
+        <p>The curves above treat <em>n</em> as public. Below, the width plays the role of <em>n</em>, and the characters play the role of a secret. The question changes with them: does the cost move when the secret’s characters move?</p>
+      </aside>
+
+      <section class="card" id="leak" aria-labelledby="leak-title">
+        <p class="eyebrow">02 · Timing side channels</p>
+        <h2 id="leak-title">When the cost depends on a secret</h2>
+        <p>Both routines compare a guess with a secret at a fixed width. Stop-early can return on the first difference, so its step count is tied to the shared prefix. Check-every always walks the whole width, so its step count is the width. You can see the secret. The point is to watch the cost, not to hide a target.</p>
+
+        <div class="leak-top">
+          <div class="controls">
+            <div class="fields">
+              <label for="secret">Secret
+                <input id="secret" value="CATS" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="width-note">
+              </label>
+              <label for="guess">Guess
+                <input id="guess" value="CARS" autocomplete="off" autocapitalize="off" spellcheck="false">
+              </label>
+            </div>
+            <p id="field-hint" class="hint"></p>
+            <p id="width-note" class="fine">Width equals the secret’s length, up to 12 characters. A short guess is padded with missing characters. Extra guess characters are not read. The text stays in this browser tab.</p>
+
+            <div class="presets" role="group" aria-label="Example guesses">
+              <button type="button" id="pre-start">Differ at the start</button>
+              <button type="button" id="pre-long">Match until the last character</button>
+              <button type="button" id="pre-exact">Exact match</button>
+            </div>
+
+            <div class="seg" role="group" aria-label="Comparison routine">
+              <button type="button" id="mode-early" aria-pressed="true">Stop early</button>
+              <button type="button" id="mode-full" aria-pressed="false">Check every character</button>
+            </div>
+
+            <div class="actions">
+              <button type="button" id="play" class="primary">Play the walk</button>
+              <button type="button" id="step">Step one character</button>
+            </div>
+            <p class="fine">Enter in the guess field plays the walk.</p>
+          </div>
+
+          <div>
+            <div class="board-scroll">
+              <div class="board-wrap">
+                <div class="row-labels" aria-hidden="true">
+                  <span>Secret</span>
+                  <span>Guess</span>
+                </div>
+                <div id="board" class="cols"></div>
+              </div>
+            </div>
+            <p id="status">Press Play, or step one character.</p>
+            <p id="result" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <p class="callout"><strong>Secret-independent, and still O(n).</strong> Check-every is linear in the public width: a longer secret does more work. Changing a character inside that width does not change the count. O(1) would be a further claim, that the count stays put when the width grows.</p>
+
+        <div class="codes">
+          <figure>
+            <figcaption>Stop early</figcaption>
+            <pre>steps ← 0
+for i ← 1 to width:
+    steps ← steps + 1
+    if secret[i] ≠ guess[i]:
+        return difference
+return match</pre>
+          </figure>
+          <figure>
+            <figcaption>Check every character</figcaption>
+            <pre>steps ← 0
+difference ← false
+for i ← 1 to width:
+    steps ← steps + 1
+    if secret[i] ≠ guess[i]:
+        difference ← true
+return match if difference is false</pre>
+          </figure>
+        </div>
+        <p class="fine">The second loop fixes the iteration count in this model. On a real machine, a branch or a memory lookup that depends on a secret can still leak. This lab stops at the iteration count and leaves that next problem named.</p>
+
+        <h3>The cost of every prefix</h3>
+        <p>Each column is the cost of a guess that shares a longer prefix with the secret you typed. Bar height is steps divided by the width.</p>
+        <p class="key">
+          <span class="swatch early"></span> Stop early
+          <span class="swatch full"></span> Check every character
+          <span class="swatch noise"></span> Noisy ticks, when enabled
+        </p>
+        <label class="check" for="noise">
+          <input id="noise" type="checkbox">
+          Plot a noisy fictional clock on the stop-early bars
+        </label>
+        <ul id="stair" class="stair"></ul>
+        <p id="stair-note"></p>
+        <p class="fine">Column numbers are the shared prefix length. Dots, when shown, are ten ticks per step plus jitter between −9 and +9. The same secret redraws the same dots. They are invented numbers, not timings from this computer.</p>
+      </section>
+    </main>
+
+  </div>
+  <script src="logic.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

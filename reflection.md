@@ -1,0 +1,9 @@
+# Reflection
+
+Complexity and timing side channels are one cost model aimed at two different parts of the input. Complexity treats the size as public and asks how cost grows with it. A timing side channel appears when cost also changes with a secret. I could repeat that after lecture, then lose it once the notation got thick. A page that counts both made it stay.
+
+I built it with an AI coding assistant. I asked for a static page with no build step: a slider for n, a dropdown of routines, and a string comparison that toggles between stopping early and checking every character. I wanted operation counts in a stated model. The first cut called the safer compare “constant time,” and that was the useful disagreement. In this model the routine is linear in the public width. The property that matters is narrower: the step count does not change when the characters change. The assistant got a working lab up fast. I still checked the counts — binary search at n = 32 is 6 probes, all-pairs is 1,024 — and revised the wording until it matched the definition.
+
+The staircase made the side-channel half concrete. With secret CATS and guess CARS, stop-early takes 3 steps and check-every takes 4. One step looks too small to matter, and for public data it is. Plotting guesses by shared-prefix length turns that step into a slope, so the running time is a function of the secret. A perfect match does not finish early. The informative cases are failures that share a prefix and then differ. The fictional clock noise scatters dots around the bars and leaves the slope standing.
+
+The growth chart is the picture I already had: quadratic work pulls away as n grows. The toggle is the one I was missing. A routine can be O(n) in the public width and still leak, because the hidden dependence is on the secret’s value.
